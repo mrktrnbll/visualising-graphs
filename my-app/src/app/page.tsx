@@ -125,10 +125,10 @@ v11,`);
 
   return (
     <div>
-      <div style={{ display: "flex", flexFlow: "column", alignContent: "center", justifyContent: "center", zIndex: 1, position: "absolute", marginLeft: 10, marginTop: 10, marginBottom: 10 }}>
+      <div style={{ display: "flex", width: "13rem", flexFlow: "column", alignContent: "center", justifyContent: "center", zIndex: 2, position: "absolute", minHeight: "100%", paddingLeft: "1em" }} >
         <TextField
             id="outlined-textarea"
-            label="Graph Input"
+            label="Target Graph Input"
             placeholder=""
             multiline
             rows={20}
@@ -136,7 +136,7 @@ v11,`);
             onChange={(e) => setGeneratedGraph(e.target.value)}
         />
         <Button
-          sx={{width: "inherit"}}
+          sx={{ marginTop: "1em", width: "12rem" }}
           variant="contained"
           onClick={() => {
             parseGraph(generatedGraph);
@@ -145,6 +145,30 @@ v11,`);
           Load Graph
         </Button>
       </div>
+
+      <div style={{ display: "flex", flexFlow: "column", alignItems: "flex-end", justifyContent: "center", zIndex: 1, position: "absolute", minHeight: "100%", minWidth: "100%", paddingRight: "1em" }} >
+        <div style={{width: "12rem"}}>
+          <TextField
+              id="outlined-textarea"
+              label="Pattern Graph Input"
+              placeholder=""
+              multiline
+              rows={20}
+              value={generatedGraph}
+              onChange={(e) => setGeneratedGraph(e.target.value)}
+          />
+          <Button
+              sx={{ marginTop: "1em", width: "12rem"}}
+              variant="contained"
+              onClick={() => {
+                parseGraph(generatedGraph);
+              }}
+          >
+            Load Graph
+          </Button>
+        </div>
+      </div>
+
       <ForceGraph2D
           graphData={myData}
           onNodeDragEnd={node => {
