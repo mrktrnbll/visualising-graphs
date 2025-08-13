@@ -4,13 +4,28 @@ import React from "react";
 import {useState, useEffect} from "react";
 import dynamic from "next/dynamic";
 import { Button, TextField } from "@mui/material";
-import {createTheme} from "@mui/material/styles";
-import {padding} from "@mui/system";
 
 // Dynamically import ForceGraph2D with SSR disabled
 const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), {
   ssr: false,
 });
+
+type GraphNode = {
+    id: string;
+    name: string;
+    val: number;
+};
+
+type GraphLink = {
+    source: string;
+    target: string;
+};
+
+type GraphData = {
+    nodes: GraphNode[];
+    links: GraphLink[];
+};
+
 
 export default function Home() {
   const [generatedGraph, setGeneratedGraph] = useState<string>(`v0,
@@ -46,14 +61,14 @@ v9,
 v9,v11
 v10,
 v11,`);
-  const [myData, setMyData] = useState({});
+  const [myData, setMyData] = useState<GraphData | undefined>({nodes: [], links: []});
 
-  function parseLadGraph(graph: string) {
+  function parseLadGraph(graph: string): GraphData {
     const lines = graph.split("\n").map(line => line.trim()).filter(Boolean);
 
     const nodeCount = parseInt(lines[0], 10);
-    let links: { source: string; target: string }[] = [];
-    let nodes = Array.from({ length: nodeCount }, (_, i) => ({
+    const links: { source: string; target: string }[] = [];
+    const nodes = Array.from({ length: nodeCount }, (_, i) => ({
       id: `v${i}`,
       name: `v${i}`,
       val: 1
@@ -61,10 +76,9 @@ v11,`);
 
     for (let i = 1; i < lines.length; i++) {
       const parts = lines[i].split(/\s+/).map(Number);
-      const neighborCount = parts[0];
       const neighbors = parts.slice(1);
 
-      for (let neighbor of neighbors) {
+      for (const neighbor of neighbors) {
         links.push({
           source: `v${i - 1}`,
           target: `v${neighbor}`
@@ -82,10 +96,10 @@ v11,`);
       return parseLadGraph(graph);
     }
 
-    let nodeSet = new Set<string>();
-    let links: { source: string; target: string }[] = [];
+    const nodeSet = new Set<string>();
+    const links: { source: string; target: string }[] = [];
 
-    for (let edge of edges) {
+    for (const edge of edges) {
       const [source, target] = edge.split(",");
 
       if (source) nodeSet.add(source);
