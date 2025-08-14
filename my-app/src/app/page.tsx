@@ -28,7 +28,7 @@ type GraphData = {
 
 
 export default function Home() {
-    const [generatedGraph, setGeneratedGraph] = useState<string>(`v0,
+    const [targetGraph, setTargetGraph] = useState<string>(`v0,
 v0,v5
 v0,v6
 v0,v7
@@ -61,7 +61,15 @@ v9,
 v9,v11
 v10,
 v11,`);
-    const [myData, setMyData] = useState<GraphData | undefined>({nodes: [], links: []});
+    const [patternGraph, setPatternGraph] = useState<string>(`v0,
+v0,v5
+v0,v6
+v0,v7
+v0,v8
+v1,`);
+    const [targetGraphData, setTargetGraphData] = useState<GraphData | undefined>({nodes: [], links: []});
+    const [patternGraphData, setPatternGraphData] = useState<GraphData | undefined>({nodes: [], links: []});
+    const [showTargetGraph, setShowTargetGraph] = useState(true);
 
     function parseLadGraph(graph: string): GraphData {
         const lines = graph.split("\n").map(line => line.trim()).filter(Boolean);
@@ -120,18 +128,28 @@ v11,`);
     }
 
     useEffect(() => {
-        setMyData(parseGraph(generatedGraph));
-    }, [generatedGraph]);
+        setTargetGraphData(parseGraph(targetGraph));
+        setPatternGraphData(parseGraph(patternGraph));
+    }, [targetGraph, patternGraph]);
 
     return (
         <div style={{ position: "relative", width: "100vw", height: "100vh" }}>
-            <ForceGraph2D
-                graphData={myData}
-                onNodeDragEnd={(node) => {
-                    node.fx = node.x;
-                    node.fy = node.y;
-                }}
-            />
+            {showTargetGraph ?
+                <ForceGraph2D
+                    graphData={targetGraphData}
+                    onNodeDragEnd={(node) => {
+                        node.fx = node.x;
+                        node.fy = node.y;
+                    }}
+                /> :
+                <ForceGraph2D
+                    graphData={patternGraphData}
+                    onNodeDragEnd={(node) => {
+                        node.fx = node.x;
+                        node.fy = node.y;
+                    }}
+                />
+            }
 
             <div
                 style={{
@@ -163,15 +181,20 @@ v11,`);
                         label="Target Graph Input"
                         multiline
                         rows={20}
-                        value={generatedGraph}
-                        onChange={(e) => setGeneratedGraph(e.target.value)}
+                        variant="outlined"
+                        value={targetGraph}
+                        onChange={(e) => setTargetGraph(e.target.value)}
                     />
+                </div>
+
+                <div
+                    style={{display: "flex", flexDirection: "column", width: "13rem", pointerEvents: "auto", background: "rgba(255,255,255,0.85)", padding: "0.5em", borderRadius: "0.5em", alignSelf: "flex-end"}}
+                >
                     <Button
-                        sx={{ marginTop: "1em", width: "100%" }}
-                        variant="contained"
-                        onClick={() => parseGraph(generatedGraph)}
+                        variant='outlined'
+                        onClick={() => {setShowTargetGraph(!showTargetGraph)}}
                     >
-                        Load Graph
+                        Switch to {showTargetGraph ? "Pattern" : "Target"} Graph
                     </Button>
                 </div>
 
@@ -189,17 +212,11 @@ v11,`);
                     <TextField
                         label="Pattern Graph Input"
                         multiline
+                        variant="outlined"
                         rows={20}
-                        value={generatedGraph}
-                        onChange={(e) => setGeneratedGraph(e.target.value)}
+                        value={patternGraph}
+                        onChange={(e) => setPatternGraph(e.target.value)}
                     />
-                    <Button
-                        sx={{ marginTop: "1em", width: "100%" }}
-                        variant="contained"
-                        onClick={() => parseGraph(generatedGraph)}
-                    >
-                        Load Graph
-                    </Button>
                 </div>
             </div>
         </div>
