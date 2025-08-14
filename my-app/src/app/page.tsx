@@ -28,7 +28,7 @@ type GraphData = {
 
 
 export default function Home() {
-  const [generatedGraph, setGeneratedGraph] = useState<string>(`v0,
+    const [generatedGraph, setGeneratedGraph] = useState<string>(`v0,
 v0,v5
 v0,v6
 v0,v7
@@ -61,122 +61,147 @@ v9,
 v9,v11
 v10,
 v11,`);
-  const [myData, setMyData] = useState<GraphData | undefined>({nodes: [], links: []});
+    const [myData, setMyData] = useState<GraphData | undefined>({nodes: [], links: []});
 
-  function parseLadGraph(graph: string): GraphData {
-    const lines = graph.split("\n").map(line => line.trim()).filter(Boolean);
+    function parseLadGraph(graph: string): GraphData {
+        const lines = graph.split("\n").map(line => line.trim()).filter(Boolean);
 
-    const nodeCount = parseInt(lines[0], 10);
-    const links: { source: string; target: string }[] = [];
-    const nodes = Array.from({ length: nodeCount }, (_, i) => ({
-      id: `v${i}`,
-      name: `v${i}`,
-      val: 1
-    }));
+        const nodeCount = parseInt(lines[0], 10);
+        const links: { source: string; target: string }[] = [];
+        const nodes = Array.from({length: nodeCount}, (_, i) => ({
+            id: `v${i}`,
+            name: `v${i}`,
+            val: 1
+        }));
 
-    for (let i = 1; i < lines.length; i++) {
-      const parts = lines[i].split(/\s+/).map(Number);
-      const neighbors = parts.slice(1);
+        for (let i = 1; i < lines.length; i++) {
+            const parts = lines[i].split(/\s+/).map(Number);
+            const neighbors = parts.slice(1);
 
-      for (const neighbor of neighbors) {
-        links.push({
-          source: `v${i - 1}`,
-          target: `v${neighbor}`
-        });
-      }
+            for (const neighbor of neighbors) {
+                links.push({
+                    source: `v${i - 1}`,
+                    target: `v${neighbor}`
+                });
+            }
+        }
+
+        return {nodes, links};
     }
 
-    return { nodes, links };
-  }
+    function parseGraph(graph: string) {
+        const edges: string[] = graph.split("\n").filter(Boolean);
 
-  function parseGraph(graph: string) {
-    const edges: string[] = graph.split("\n").filter(Boolean);
+        if (!edges.some(line => line.includes(","))) {
+            return parseLadGraph(graph);
+        }
 
-    if (!edges.some(line => line.includes(","))) {
-      return parseLadGraph(graph);
+        const nodeSet = new Set<string>();
+        const links: { source: string; target: string }[] = [];
+
+        for (const edge of edges) {
+            const [source, target] = edge.split(",");
+
+            if (source) nodeSet.add(source);
+            if (target) nodeSet.add(target);
+
+            if (source && target) {
+                links.push({source, target});
+            }
+        }
+
+        const nodes = Array.from(nodeSet).map((id) => ({
+            id,
+            name: id,
+            val: 1,
+        }));
+
+        return {nodes, links};
     }
 
-    const nodeSet = new Set<string>();
-    const links: { source: string; target: string }[] = [];
+    useEffect(() => {
+        setMyData(parseGraph(generatedGraph));
+    }, [generatedGraph]);
 
-    for (const edge of edges) {
-      const [source, target] = edge.split(",");
+    return (
+        <div style={{ position: "relative", width: "100vw", height: "100vh" }}>
+            <ForceGraph2D
+                graphData={myData}
+                onNodeDragEnd={(node) => {
+                    node.fx = node.x;
+                    node.fy = node.y;
+                }}
+            />
 
-      if (source) nodeSet.add(source);
-      if (target) nodeSet.add(target);
+            <div
+                style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                    zIndex: 2,
+                    pointerEvents: "none",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "1em",
+                }}
+            >
+                <div
+                    style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        width: "13rem",
+                        pointerEvents: "auto",
+                        background: "rgba(255,255,255,0.85)",
+                        padding: "0.5em",
+                        borderRadius: "0.5em",
+                    }}
+                >
+                    <TextField
+                        label="Target Graph Input"
+                        multiline
+                        rows={20}
+                        value={generatedGraph}
+                        onChange={(e) => setGeneratedGraph(e.target.value)}
+                    />
+                    <Button
+                        sx={{ marginTop: "1em", width: "100%" }}
+                        variant="contained"
+                        onClick={() => parseGraph(generatedGraph)}
+                    >
+                        Load Graph
+                    </Button>
+                </div>
 
-      if (source && target) {
-        links.push({ source, target });
-      }
-    }
-
-    const nodes = Array.from(nodeSet).map((id) => ({
-      id,
-      name: id,
-      val: 1,
-    }));
-
-    return { nodes, links };
-  }
-
-  useEffect(() => {
-    setMyData(parseGraph(generatedGraph));
-  }, [generatedGraph]);
-
-  return (
-    <div>
-      <div style={{ display: "flex", width: "13rem", flexFlow: "column", alignContent: "center", justifyContent: "center", zIndex: 2, position: "absolute", minHeight: "100%", paddingLeft: "1em" }} >
-        <TextField
-            id="outlined-textarea"
-            label="Target Graph Input"
-            placeholder=""
-            multiline
-            rows={20}
-            value={generatedGraph}
-            onChange={(e) => setGeneratedGraph(e.target.value)}
-        />
-        <Button
-          sx={{ marginTop: "1em", width: "12rem" }}
-          variant="contained"
-          onClick={() => {
-            parseGraph(generatedGraph);
-          }}
-        >
-          Load Graph
-        </Button>
-      </div>
-
-      <div style={{ display: "flex", flexFlow: "column", alignItems: "flex-end", justifyContent: "center", zIndex: 1, position: "absolute", minHeight: "100%", minWidth: "100%", paddingRight: "1em" }} >
-        <div style={{width: "12rem"}}>
-          <TextField
-              id="outlined-textarea"
-              label="Pattern Graph Input"
-              placeholder=""
-              multiline
-              rows={20}
-              value={generatedGraph}
-              onChange={(e) => setGeneratedGraph(e.target.value)}
-          />
-          <Button
-              sx={{ marginTop: "1em", width: "12rem"}}
-              variant="contained"
-              onClick={() => {
-                parseGraph(generatedGraph);
-              }}
-          >
-            Load Graph
-          </Button>
+                <div
+                    style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        width: "13rem",
+                        pointerEvents: "auto",
+                        background: "rgba(255,255,255,0.85)",
+                        padding: "0.5em",
+                        borderRadius: "0.5em",
+                    }}
+                >
+                    <TextField
+                        label="Pattern Graph Input"
+                        multiline
+                        rows={20}
+                        value={generatedGraph}
+                        onChange={(e) => setGeneratedGraph(e.target.value)}
+                    />
+                    <Button
+                        sx={{ marginTop: "1em", width: "100%" }}
+                        variant="contained"
+                        onClick={() => parseGraph(generatedGraph)}
+                    >
+                        Load Graph
+                    </Button>
+                </div>
+            </div>
         </div>
-      </div>
-
-      <ForceGraph2D
-          graphData={myData}
-          onNodeDragEnd={node => {
-            node.fx = node.x;
-            node.fy = node.y;
-            node.fz = node.z;
-          }}
-      />
-    </div>
-  );
+    );
 }
