@@ -147,6 +147,7 @@ v1,`);
                         const bckgDimensions = [textWidth, fontSize].map(n => n + fontSize * 0.2);
 
                         ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                        // @ts-ignore
                         ctx.fillRect(node.x! - bckgDimensions[0] / 2, node.y! - bckgDimensions[1] / 2, ...bckgDimensions);
 
                         ctx.textAlign = 'center';
@@ -160,6 +161,7 @@ v1,`);
                         ctx.fillStyle = color;
                         const bckgDimensions = (node as any).__bckgDimensions;
                         if (bckgDimensions) {
+                            // @ts-ignore
                             ctx.fillRect(node.x! - bckgDimensions[0] / 2, node.y! - bckgDimensions[1] / 2, ...bckgDimensions);
                         }
                     }}
