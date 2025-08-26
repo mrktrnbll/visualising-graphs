@@ -70,6 +70,7 @@ v1,`);
     const [targetGraphData, setTargetGraphData] = useState<GraphData | undefined>({nodes: [], links: []});
     const [patternGraphData, setPatternGraphData] = useState<GraphData | undefined>({nodes: [], links: []});
     const [showTargetGraph, setShowTargetGraph] = useState(true);
+    const [useText, setUseText] = useState<boolean>(false);
 
     function parseLadGraph(graph: string): GraphData {
         const lines = graph.split("\n").map(line => line.trim()).filter(Boolean);
@@ -134,14 +135,48 @@ v1,`);
 
     return (
         <div style={{ position: "relative", width: "100vw", height: "100vh" }}>
-            {showTargetGraph ?
+            {useText ? (
+                <ForceGraph2D
+                    graphData={targetGraphData}
+                    nodeAutoColorBy="group"
+                    nodeCanvasObject={(node, ctx, globalScale) => {
+                        const label = node.id as string;
+                        const fontSize = 12 / globalScale;
+                        ctx.font = `${fontSize}px Sans-Serif`;
+                        const textWidth = ctx.measureText(label).width;
+                        const bckgDimensions = [textWidth, fontSize].map(n => n + fontSize * 0.2);
+
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                        ctx.fillRect(node.x! - bckgDimensions[0] / 2, node.y! - bckgDimensions[1] / 2, ...bckgDimensions);
+
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillStyle = (node as any).color;
+                        ctx.fillText(label, node.x!, node.y!);
+
+                        (node as any).__bckgDimensions = bckgDimensions;
+                    }}
+                    nodePointerAreaPaint={(node, color, ctx) => {
+                        ctx.fillStyle = color;
+                        const bckgDimensions = (node as any).__bckgDimensions;
+                        if (bckgDimensions) {
+                            ctx.fillRect(node.x! - bckgDimensions[0] / 2, node.y! - bckgDimensions[1] / 2, ...bckgDimensions);
+                        }
+                    }}
+                    onNodeDragEnd={(node) => {
+                        node.fx = node.x;
+                        node.fy = node.y;
+                    }}
+                />
+            ) : showTargetGraph ? (
                 <ForceGraph2D
                     graphData={targetGraphData}
                     onNodeDragEnd={(node) => {
                         node.fx = node.x;
                         node.fy = node.y;
                     }}
-                /> :
+                />
+            ) : (
                 <ForceGraph2D
                     graphData={patternGraphData}
                     onNodeDragEnd={(node) => {
@@ -149,7 +184,7 @@ v1,`);
                         node.fy = node.y;
                     }}
                 />
-            }
+            )}
 
             <div
                 style={{
@@ -188,13 +223,21 @@ v1,`);
                 </div>
 
                 <div
-                    style={{display: "flex", flexDirection: "column", width: "13rem", pointerEvents: "auto", background: "rgba(255,255,255,0.85)", padding: "0.5em", borderRadius: "0.5em", alignSelf: "flex-end"}}
+                    style={{display: "flex", maxHeight: "20rem", flexDirection: "row", width: "20rem", pointerEvents: "auto", background: "rgba(255,255,255,0.85)", padding: "0.5em", borderRadius: "0.5em", alignSelf: "flex-end"}}
                 >
                     <Button
                         variant='outlined'
                         onClick={() => {setShowTargetGraph(!showTargetGraph)}}
+                        style={{margin: 3, maxHeight: "20rem"}}
                     >
-                        Switch to {showTargetGraph ? "Pattern" : "Target"} Graph
+                        Switch to {showTargetGraph ? "pattern" : "target"} Graph
+                    </Button>
+                    <Button
+                        variant='outlined'
+                        onClick={() => {setUseText(!useText)}}
+                        style={{margin: 3, maxHeight: "20rem"}}
+                    >
+                        Switch to {useText ? "node" : "text"} Graph
                     </Button>
                 </div>
 
